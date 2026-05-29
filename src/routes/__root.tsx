@@ -80,11 +80,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "PataSegura — Proteção animal urbana" },
       { name: "description", content: "Tecnologia ajudando a proteger animais e a cidade." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "PataSegura" },
+      { property: "og:title", content: "PataSegura — Proteção animal urbana" },
       { property: "og:description", content: "Tecnologia ajudando a proteger animais e a cidade." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "PataSegura — Proteção animal urbana" },
+      { name: "twitter:description", content: "Tecnologia ajudando a proteger animais e a cidade." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/04bdb748-3931-48f3-9cdf-67a2ad4c58ea" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/04bdb748-3931-48f3-9cdf-67a2ad4c58ea" },
     ],
     links: [
       {
