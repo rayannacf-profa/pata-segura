@@ -384,12 +384,12 @@ function EmptyState({
       <Icon className="mx-auto h-8 w-8 text-muted-foreground" />
       <p className="mt-3 text-sm text-muted-foreground">{message}</p>
       {cta && (
-        <Link
-          to={cta.to}
+        <a
+          href={cta.to}
           className="mt-3 inline-block rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold"
         >
           {cta.label}
-        </Link>
+        </a>
       )}
     </div>
   );
