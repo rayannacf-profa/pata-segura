@@ -13,6 +13,7 @@ import { Route as MapaRouteImport } from './routes/mapa'
 import { Route as DenunciaRouteImport } from './routes/denuncia'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AvisosRouteImport } from './routes/avisos'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
 const MapaRoute = MapaRouteImport.update({
@@ -35,6 +36,11 @@ const AvisosRoute = AvisosRouteImport.update({
   path: '/avisos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,6 +49,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/avisos': typeof AvisosRoute
   '/cadastro': typeof CadastroRoute
   '/denuncia': typeof DenunciaRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/avisos': typeof AvisosRoute
   '/cadastro': typeof CadastroRoute
   '/denuncia': typeof DenunciaRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/avisos': typeof AvisosRoute
   '/cadastro': typeof CadastroRoute
   '/denuncia': typeof DenunciaRoute
@@ -65,14 +74,22 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/avisos' | '/cadastro' | '/denuncia' | '/mapa'
+  fullPaths: '/' | '/admin' | '/avisos' | '/cadastro' | '/denuncia' | '/mapa'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/avisos' | '/cadastro' | '/denuncia' | '/mapa'
-  id: '__root__' | '/' | '/avisos' | '/cadastro' | '/denuncia' | '/mapa'
+  to: '/' | '/admin' | '/avisos' | '/cadastro' | '/denuncia' | '/mapa'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/avisos'
+    | '/cadastro'
+    | '/denuncia'
+    | '/mapa'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   AvisosRoute: typeof AvisosRoute
   CadastroRoute: typeof CadastroRoute
   DenunciaRoute: typeof DenunciaRoute
@@ -109,6 +126,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AvisosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -121,6 +145,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   AvisosRoute: AvisosRoute,
   CadastroRoute: CadastroRoute,
   DenunciaRoute: DenunciaRoute,
