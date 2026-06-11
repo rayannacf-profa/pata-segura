@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
-import { PawPrint, MapPin, AlertTriangle, Bell, CalendarCheck, Shield } from "lucide-react";
+import { PawPrint, MapPin, AlertTriangle, Bell, CalendarCheck, Shield, LayoutTemplate } from "lucide-react";
 import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/")({
@@ -27,6 +27,7 @@ function Index() {
     { to: "/denuncia", icon: AlertTriangle, label: "Denunciar maus-tratos", desc: "Envie fotos e localização" },
     { to: "/avisos", icon: Bell, label: "Avisos da prefeitura", desc: "Campanhas e atualizações" },
     { to: "/admin", icon: Shield, label: "Painel da prefeitura", desc: "Gestão e triagem clínica" },
+    { to: "/editor", icon: LayoutTemplate, label: "Editor de protótipo", desc: "Esboce telas com elementos arrastáveis" },
   ] as const;
 
   return (
