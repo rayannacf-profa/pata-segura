@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Trash2, Plus, Type, Square } from "lucide-react";
+import { Trash2, Plus, Type, Square, Download, Upload } from "lucide-react";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/editor")({
   component: EditorPage,
@@ -34,6 +35,7 @@ function EditorPage() {
   const [elements, setElements] = useState<PrototypeElement[]>(initial);
   const [selectedId, setSelectedId] = useState<string | null>("1");
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selected = elements.find((e) => e.id === selectedId) ?? null;
 
@@ -76,6 +78,37 @@ function EditorPage() {
 
   const onPointerUp = () => setDragOffset(null);
 
+  const saveJson = () => {
+    const blob = new Blob([JSON.stringify(elements, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `prototipo-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const loadJson = async (file: File) => {
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!Array.isArray(parsed)) throw new Error("Formato inválido");
+      const normalized: PrototypeElement[] = parsed
+        .filter((e) => e && (e.type === "button" || e.type === "label"))
+        .map((e, i) => ({
+          id: e.id ?? crypto.randomUUID(),
+          type: e.type,
+          text: String(e.text ?? ""),
+          x: Number(e.x ?? 20 + i * 10),
+          y: Number(e.y ?? 20 + i * 30),
+        }));
+      setElements(normalized);
+      setSelectedId(normalized[0]?.id ?? null);
+    } catch (err) {
+      alert("Não foi possível carregar o arquivo: " + (err as Error).message);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-md p-4 space-y-4">
       <header className="space-y-1">
@@ -85,13 +118,30 @@ function EditorPage() {
         </p>
       </header>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="secondary" onClick={() => addElement("button")}>
           <Plus className="h-4 w-4 mr-1" /> <Square className="h-4 w-4 mr-1" /> Botão
         </Button>
         <Button size="sm" variant="secondary" onClick={() => addElement("label")}>
           <Plus className="h-4 w-4 mr-1" /> <Type className="h-4 w-4 mr-1" /> Texto
         </Button>
+        <Button size="sm" variant="outline" onClick={saveJson}>
+          <Download className="h-4 w-4 mr-1" /> Salvar
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
+          <Upload className="h-4 w-4 mr-1" /> Carregar
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) loadJson(file);
+            e.target.value = "";
+          }}
+        />
       </div>
 
       <Card
