@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MapaRouteImport } from './routes/mapa'
+import { Route as EditorRouteImport } from './routes/editor'
 import { Route as DenunciaRouteImport } from './routes/denuncia'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AvisosRouteImport } from './routes/avisos'
@@ -19,6 +20,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const MapaRoute = MapaRouteImport.update({
   id: '/mapa',
   path: '/mapa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EditorRoute = EditorRouteImport.update({
+  id: '/editor',
+  path: '/editor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DenunciaRoute = DenunciaRouteImport.update({
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/avisos': typeof AvisosRoute
   '/cadastro': typeof CadastroRoute
   '/denuncia': typeof DenunciaRoute
+  '/editor': typeof EditorRoute
   '/mapa': typeof MapaRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/avisos': typeof AvisosRoute
   '/cadastro': typeof CadastroRoute
   '/denuncia': typeof DenunciaRoute
+  '/editor': typeof EditorRoute
   '/mapa': typeof MapaRoute
 }
 export interface FileRoutesById {
@@ -70,13 +78,28 @@ export interface FileRoutesById {
   '/avisos': typeof AvisosRoute
   '/cadastro': typeof CadastroRoute
   '/denuncia': typeof DenunciaRoute
+  '/editor': typeof EditorRoute
   '/mapa': typeof MapaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/avisos' | '/cadastro' | '/denuncia' | '/mapa'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/avisos'
+    | '/cadastro'
+    | '/denuncia'
+    | '/editor'
+    | '/mapa'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/avisos' | '/cadastro' | '/denuncia' | '/mapa'
+  to:
+    | '/'
+    | '/admin'
+    | '/avisos'
+    | '/cadastro'
+    | '/denuncia'
+    | '/editor'
+    | '/mapa'
   id:
     | '__root__'
     | '/'
@@ -84,6 +107,7 @@ export interface FileRouteTypes {
     | '/avisos'
     | '/cadastro'
     | '/denuncia'
+    | '/editor'
     | '/mapa'
   fileRoutesById: FileRoutesById
 }
@@ -93,6 +117,7 @@ export interface RootRouteChildren {
   AvisosRoute: typeof AvisosRoute
   CadastroRoute: typeof CadastroRoute
   DenunciaRoute: typeof DenunciaRoute
+  EditorRoute: typeof EditorRoute
   MapaRoute: typeof MapaRoute
 }
 
@@ -103,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/mapa'
       fullPath: '/mapa'
       preLoaderRoute: typeof MapaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/editor': {
+      id: '/editor'
+      path: '/editor'
+      fullPath: '/editor'
+      preLoaderRoute: typeof EditorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/denuncia': {
@@ -149,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   AvisosRoute: AvisosRoute,
   CadastroRoute: CadastroRoute,
   DenunciaRoute: DenunciaRoute,
+  EditorRoute: EditorRoute,
   MapaRoute: MapaRoute,
 }
 export const routeTree = rootRouteImport
