@@ -2,6 +2,34 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Shield, Plus, Trash2, CalendarCheck, PawPrint, FileText, Stethoscope, Download, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { useStore, uid, type CastrationSlot } from "@/lib/store";
+import { useAuth } from "@/hooks/use-auth";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+type Dog = {
+  id: string;
+  description: string;
+  condition: string;
+  photo: string | null;
+  lat: number | null;
+  lng: number | null;
+  address: string | null;
+  created_at: string;
+};
+
+function useDogs() {
+  return useQuery<Dog[]>({
+    queryKey: ["dogs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("dogs")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Dog[];
+    },
+  });
+}
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -16,16 +44,18 @@ export const Route = createFileRoute("/admin")({
 type Tab = "overview" | "animals" | "reports" | "castration" | "triage";
 
 function AdminPage() {
-  const { state, update } = useStore();
-  const [tab, setTab] = useState<Tab>("overview");
+  const { isAdmin } = useAuth();
+  const [tab, setTab] = useState<Tab>(isAdmin ? "overview" : "animals");
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "overview", label: "Visão geral" },
-    { id: "animals", label: "Animais" },
-    { id: "reports", label: "Denúncias" },
-    { id: "castration", label: "Castração" },
-    { id: "triage", label: "Triagem" },
-  ];
+  const tabs: { id: Tab; label: string }[] = isAdmin
+    ? [
+        { id: "overview", label: "Visão geral" },
+        { id: "animals", label: "Animais" },
+        { id: "reports", label: "Denúncias" },
+        { id: "castration", label: "Castração" },
+        { id: "triage", label: "Triagem" },
+      ]
+    : [{ id: "animals", label: "Cachorros cadastrados" }];
 
   return (
     <div className="mx-auto max-w-md">
@@ -38,25 +68,14 @@ function AdminPage() {
             <Shield className="h-6 w-6" />
           </div>
           <div className="flex-1">
-            <h1 className="text-xl font-bold tracking-tight">Painel da prefeitura</h1>
-            <p className="text-xs text-primary-foreground/80">Gestão e planejamento</p>
+            <h1 className="text-xl font-bold tracking-tight">
+              {isAdmin ? "Painel da prefeitura" : "Cachorros cadastrados"}
+            </h1>
+            <p className="text-xs text-primary-foreground/80">
+              {isAdmin ? "Gestão e planejamento" : "Visualização pública"}
+            </p>
           </div>
         </div>
-        <label className="mt-5 flex items-center justify-between gap-3 rounded-2xl bg-white/15 backdrop-blur px-4 py-3">
-          <div>
-            <div className="text-sm font-semibold">Entrar como admin</div>
-            <div className="text-[11px] text-primary-foreground/80">Habilita criação e moderação</div>
-          </div>
-          <input
-            type="checkbox"
-            checked={state.isAdmin}
-            onChange={(e) => update({ isAdmin: e.target.checked })}
-            className="h-5 w-9 appearance-none rounded-full bg-white/30 relative cursor-pointer transition-all
-              checked:bg-secondary
-              before:content-[''] before:absolute before:top-0.5 before:left-0.5 before:h-4 before:w-4 before:rounded-full before:bg-white before:transition-all
-              checked:before:translate-x-4"
-          />
-        </label>
       </header>
 
       <div className="px-5 -mt-3 overflow-x-auto">
@@ -78,11 +97,11 @@ function AdminPage() {
       </div>
 
       <div className="px-5 pt-5 pb-8">
-        {tab === "overview" && <Overview />}
+        {tab === "overview" && isAdmin && <Overview />}
         {tab === "animals" && <Animals />}
-        {tab === "reports" && <Reports />}
-        {tab === "castration" && <Castration />}
-        {tab === "triage" && <Triage />}
+        {tab === "reports" && isAdmin && <Reports />}
+        {tab === "castration" && isAdmin && <Castration />}
+        {tab === "triage" && isAdmin && <Triage />}
       </div>
     </div>
   );
@@ -90,8 +109,9 @@ function AdminPage() {
 
 function Overview() {
   const { state } = useStore();
+  const { data: dogs = [] } = useDogs();
   const cards = [
-    { label: "Animais cadastrados", value: state.animals.length, icon: PawPrint, color: "text-primary", bg: "bg-primary/10" },
+    { label: "Animais cadastrados", value: dogs.length, icon: PawPrint, color: "text-primary", bg: "bg-primary/10" },
     { label: "Denúncias recebidas", value: state.reports.length, icon: AlertTriangle, color: "text-destructive", bg: "bg-destructive/10" },
     { label: "Avisos publicados", value: state.notices.length, icon: FileText, color: "text-secondary", bg: "bg-secondary/10" },
     { label: "Datas de castração", value: state.castrations.length, icon: CalendarCheck, color: "text-primary", bg: "bg-primary/10" },
@@ -109,32 +129,46 @@ function Overview() {
           </div>
         ))}
       </div>
-      {state.isAdmin && (
-        <Link
-          to="/cadastro"
-          className="block rounded-2xl bg-primary text-primary-foreground p-4 text-center text-sm font-semibold shadow-[var(--shadow-soft)]"
-        >
-          + Cadastrar novo animal
-        </Link>
-      )}
+      <Link
+        to="/cadastro"
+        className="block rounded-2xl bg-primary text-primary-foreground p-4 text-center text-sm font-semibold shadow-[var(--shadow-soft)]"
+      >
+        + Cadastrar novo animal
+      </Link>
     </div>
   );
 }
 
 function Animals() {
-  const { state, update } = useStore();
-  if (state.animals.length === 0) {
+  const { isAdmin } = useAuth();
+  const { data: dogs = [], isLoading } = useDogs();
+  const qc = useQueryClient();
+
+  const remove = async (id: string) => {
+    const { error } = await supabase.from("dogs").delete().eq("id", id);
+    if (error) {
+      alert("Erro ao excluir: " + error.message);
+      return;
+    }
+    qc.invalidateQueries({ queryKey: ["dogs"] });
+    qc.invalidateQueries({ queryKey: ["dogs", "count"] });
+  };
+
+  if (isLoading) {
+    return <p className="text-center text-sm text-muted-foreground py-8">Carregando...</p>;
+  }
+  if (dogs.length === 0) {
     return (
       <EmptyState
         icon={PawPrint}
         message="Nenhum animal cadastrado ainda."
-        cta={state.isAdmin ? { to: "/cadastro", label: "Cadastrar primeiro animal" } : undefined}
+        cta={isAdmin ? { to: "/cadastro", label: "Cadastrar primeiro animal" } : undefined}
       />
     );
   }
   return (
     <div className="space-y-3">
-      {state.animals.map((a) => (
+      {dogs.map((a) => (
         <div key={a.id} className="rounded-2xl border border-border bg-card p-3 flex gap-3">
           {a.photo ? (
             <img src={a.photo} alt="" className="h-16 w-16 rounded-xl object-cover" />
@@ -146,11 +180,8 @@ function Animals() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div className="text-xs font-semibold text-primary uppercase tracking-wide">{a.condition}</div>
-              {state.isAdmin && (
-                <button
-                  onClick={() => update({ animals: state.animals.filter((x) => x.id !== a.id) })}
-                  className="text-muted-foreground hover:text-destructive"
-                >
+              {isAdmin && (
+                <button onClick={() => remove(a.id)} className="text-muted-foreground hover:text-destructive">
                   <Trash2 className="h-4 w-4" />
                 </button>
               )}
@@ -158,7 +189,7 @@ function Animals() {
             <p className="text-sm mt-0.5 line-clamp-2">{a.description}</p>
             {a.lat != null && (
               <p className="text-[11px] text-muted-foreground mt-1">
-                {a.lat.toFixed(4)}, {a.lng!.toFixed(4)}
+                {a.lat.toFixed(4)}, {a.lng?.toFixed(4)}
               </p>
             )}
           </div>
