@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PawPrint, Camera, MapPin, ShieldAlert, Check } from "lucide-react";
 import { useState } from "react";
-import { useStore, uid, type Animal } from "@/lib/store";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/cadastro")({
   head: () => ({
@@ -14,15 +16,20 @@ export const Route = createFileRoute("/cadastro")({
 });
 
 function CadastroPage() {
-  const { state, update } = useStore();
+  const { isAdmin, loading } = useAuth();
+  const qc = useQueryClient();
   const nav = useNavigate();
   const [description, setDescription] = useState("");
   const [condition, setCondition] = useState("Aparenta saudável");
   const [photo, setPhoto] = useState<string | undefined>();
   const [coords, setCoords] = useState<{ lat: number; lng: number } | undefined>();
   const [done, setDone] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!state.isAdmin) {
+  if (loading) return <div className="p-8 text-center text-sm text-muted-foreground">Carregando...</div>;
+
+  if (!isAdmin) {
     return (
       <div className="mx-auto max-w-md px-5 pt-10">
         <div className="rounded-2xl border border-border bg-card p-6 text-center">
@@ -42,7 +49,7 @@ function CadastroPage() {
               to="/admin"
               className="rounded-xl border border-border bg-background py-2.5 text-sm font-semibold"
             >
-              Painel
+              Ver lista
             </Link>
           </div>
         </div>
@@ -66,18 +73,26 @@ function CadastroPage() {
     );
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!description.trim()) return;
-    const a: Animal = {
-      id: uid(),
+    setSaving(true);
+    setError(null);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from("dogs").insert({
       description: description.trim(),
       condition,
-      photo,
-      lat: coords?.lat,
-      lng: coords?.lng,
-      createdAt: Date.now(),
-    };
-    update({ animals: [a, ...state.animals] });
+      photo: photo ?? null,
+      lat: coords?.lat ?? null,
+      lng: coords?.lng ?? null,
+      created_by: user?.id ?? null,
+    });
+    setSaving(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    qc.invalidateQueries({ queryKey: ["dogs"] });
+    qc.invalidateQueries({ queryKey: ["dogs", "count"] });
     setDone(true);
     setTimeout(() => nav({ to: "/admin" }), 1000);
   };
@@ -161,11 +176,12 @@ function CadastroPage() {
 
         <button
           onClick={submit}
-          disabled={!description.trim()}
+          disabled={!description.trim() || saving}
           className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-semibold disabled:opacity-50"
         >
-          Salvar cadastro
+          {saving ? "Salvando..." : "Salvar cadastro"}
         </button>
+        {error && <p className="text-xs text-destructive">{error}</p>}
       </div>
     </div>
   );
