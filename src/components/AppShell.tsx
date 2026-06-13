@@ -1,5 +1,7 @@
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import { Home, MapPin, Bell, AlertTriangle, Shield } from "lucide-react";
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 const tabs = [
   { to: "/", label: "Início", icon: Home },
@@ -11,6 +13,33 @@ const tabs = [
 
 export function AppShell() {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const { user, loading } = useAuth();
+  const nav = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user && path !== "/auth") {
+      nav({ to: "/auth" });
+    }
+  }, [loading, user, path, nav]);
+
+  const isAuthRoute = path === "/auth";
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
+        Carregando...
+      </div>
+    );
+  }
+
+  if (isAuthRoute || !user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Outlet />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <main className="flex-1 pb-24">

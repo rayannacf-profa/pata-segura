@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
-import { PawPrint, MapPin, AlertTriangle, Bell, CalendarCheck, Shield, LayoutTemplate } from "lucide-react";
+import { PawPrint, MapPin, AlertTriangle, Bell, CalendarCheck, Shield, LogOut } from "lucide-react";
 import { useStore } from "@/lib/store";
+import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -17,8 +20,16 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { state } = useStore();
+  const { isAdmin, user, signOut } = useAuth();
+  const { data: animalsCount = 0 } = useQuery({
+    queryKey: ["dogs", "count"],
+    queryFn: async () => {
+      const { count } = await supabase.from("dogs").select("*", { count: "exact", head: true });
+      return count ?? 0;
+    },
+  });
   const stats = [
-    { label: "Animais", value: state.animals.length },
+    { label: "Animais", value: animalsCount },
     { label: "Denúncias", value: state.reports.length },
     { label: "Avisos", value: state.notices.length },
   ];
@@ -26,8 +37,7 @@ function Index() {
     { to: "/mapa", icon: MapPin, label: "Mapa de focos", desc: "Veja áreas críticas da cidade" },
     { to: "/denuncia", icon: AlertTriangle, label: "Denunciar maus-tratos", desc: "Envie fotos e localização" },
     { to: "/avisos", icon: Bell, label: "Avisos da prefeitura", desc: "Campanhas e atualizações" },
-    { to: "/admin", icon: Shield, label: "Painel da prefeitura", desc: "Gestão e triagem clínica" },
-    { to: "/editor", icon: LayoutTemplate, label: "Editor de protótipo", desc: "Esboce telas com elementos arrastáveis" },
+    { to: "/admin", icon: Shield, label: isAdmin ? "Painel da prefeitura" : "Cachorros cadastrados", desc: isAdmin ? "Gestão e triagem clínica" : "Lista pública de animais" },
   ] as const;
 
   return (
@@ -40,10 +50,19 @@ function Index() {
           <div className="rounded-2xl bg-white/15 p-2.5 backdrop-blur">
             <PawPrint className="h-7 w-7" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold tracking-tight">PataSegura</h1>
-            <p className="text-xs text-primary-foreground/80">Proteção animal urbana</p>
+            <p className="text-xs text-primary-foreground/80">
+              {isAdmin ? "Administrador" : "Visitante"} · {user?.email}
+            </p>
           </div>
+          <button
+            onClick={() => signOut()}
+            className="rounded-xl bg-white/15 p-2 backdrop-blur"
+            aria-label="Sair"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
         <p className="mt-5 text-base font-medium leading-snug">
           Tecnologia ajudando a proteger animais e a cidade.
