@@ -10,21 +10,16 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MapaRouteImport } from './routes/mapa'
-import { Route as EditorRouteImport } from './routes/editor'
 import { Route as DenunciaRouteImport } from './routes/denuncia'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AvisosRouteImport } from './routes/avisos'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
 const MapaRoute = MapaRouteImport.update({
   id: '/mapa',
   path: '/mapa',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EditorRoute = EditorRouteImport.update({
-  id: '/editor',
-  path: '/editor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DenunciaRoute = DenunciaRouteImport.update({
@@ -42,6 +37,11 @@ const AvisosRoute = AvisosRouteImport.update({
   path: '/avisos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -56,29 +56,29 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
   '/avisos': typeof AvisosRoute
   '/cadastro': typeof CadastroRoute
   '/denuncia': typeof DenunciaRoute
-  '/editor': typeof EditorRoute
   '/mapa': typeof MapaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
   '/avisos': typeof AvisosRoute
   '/cadastro': typeof CadastroRoute
   '/denuncia': typeof DenunciaRoute
-  '/editor': typeof EditorRoute
   '/mapa': typeof MapaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
   '/avisos': typeof AvisosRoute
   '/cadastro': typeof CadastroRoute
   '/denuncia': typeof DenunciaRoute
-  '/editor': typeof EditorRoute
   '/mapa': typeof MapaRoute
 }
 export interface FileRouteTypes {
@@ -86,38 +86,31 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/auth'
     | '/avisos'
     | '/cadastro'
     | '/denuncia'
-    | '/editor'
     | '/mapa'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/admin'
-    | '/avisos'
-    | '/cadastro'
-    | '/denuncia'
-    | '/editor'
-    | '/mapa'
+  to: '/' | '/admin' | '/auth' | '/avisos' | '/cadastro' | '/denuncia' | '/mapa'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/auth'
     | '/avisos'
     | '/cadastro'
     | '/denuncia'
-    | '/editor'
     | '/mapa'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  AuthRoute: typeof AuthRoute
   AvisosRoute: typeof AvisosRoute
   CadastroRoute: typeof CadastroRoute
   DenunciaRoute: typeof DenunciaRoute
-  EditorRoute: typeof EditorRoute
   MapaRoute: typeof MapaRoute
 }
 
@@ -128,13 +121,6 @@ declare module '@tanstack/react-router' {
       path: '/mapa'
       fullPath: '/mapa'
       preLoaderRoute: typeof MapaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/editor': {
-      id: '/editor'
-      path: '/editor'
-      fullPath: '/editor'
-      preLoaderRoute: typeof EditorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/denuncia': {
@@ -158,6 +144,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AvisosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -178,10 +171,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  AuthRoute: AuthRoute,
   AvisosRoute: AvisosRoute,
   CadastroRoute: CadastroRoute,
   DenunciaRoute: DenunciaRoute,
-  EditorRoute: EditorRoute,
   MapaRoute: MapaRoute,
 }
 export const routeTree = rootRouteImport
