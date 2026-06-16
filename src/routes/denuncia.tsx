@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AlertTriangle, Camera, MapPin, Check } from "lucide-react";
 import { useState } from "react";
-import { useStore, uid, type Report } from "@/lib/store";
+import { useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/denuncia")({
   head: () => ({
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/denuncia")({
 });
 
 function DenunciaPage() {
-  const { state, update } = useStore();
+  const { addReport } = useStore();
   const nav = useNavigate();
   const [description, setDescription] = useState("");
   const [photo, setPhoto] = useState<string | undefined>();
@@ -42,19 +42,20 @@ function DenunciaPage() {
     );
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!description.trim()) return;
-    const next: Report = {
-      id: uid(),
-      description: description.trim(),
-      photo,
-      lat: coords?.lat,
-      lng: coords?.lng,
-      createdAt: Date.now(),
-    };
-    update({ reports: [next, ...state.reports] });
-    setDone(true);
-    setTimeout(() => nav({ to: "/" }), 1200);
+    try {
+      await addReport({
+        description: description.trim(),
+        photo,
+        lat: coords?.lat,
+        lng: coords?.lng,
+      });
+      setDone(true);
+      setTimeout(() => nav({ to: "/" }), 1200);
+    } catch (e) {
+      alert("Erro ao enviar denúncia: " + (e as Error).message);
+    }
   };
 
   if (done) {
