@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Shield, Plus, Trash2, CalendarCheck, PawPrint, FileText, Stethoscope, Download, AlertTriangle } from "lucide-react";
 import { useState } from "react";
-import { useStore, uid, type CastrationSlot } from "@/lib/store";
+import { useStore } from "@/lib/store";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -200,7 +200,7 @@ function Animals() {
 }
 
 function Reports() {
-  const { state, update } = useStore();
+  const { state, removeReport } = useStore();
   if (state.reports.length === 0) {
     return <EmptyState icon={AlertTriangle} message="Nenhuma denúncia recebida ainda." />;
   }
@@ -222,7 +222,7 @@ function Reports() {
               </div>
               {state.isAdmin && (
                 <button
-                  onClick={() => update({ reports: state.reports.filter((x) => x.id !== r.id) })}
+                  onClick={() => removeReport(r.id).catch((e) => alert("Erro: " + e.message))}
                   className="text-muted-foreground hover:text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -243,13 +243,16 @@ function Reports() {
 }
 
 function Castration() {
-  const { state, update } = useStore();
+  const { state, addCastration, removeCastration } = useStore();
   const [form, setForm] = useState({ date: "", location: "", slots: 20 });
-  const create = () => {
+  const create = async () => {
     if (!form.date || !form.location.trim()) return;
-    const c: CastrationSlot = { id: uid(), ...form, taken: 0, createdAt: Date.now() };
-    update({ castrations: [c, ...state.castrations] });
-    setForm({ date: "", location: "", slots: 20 });
+    try {
+      await addCastration(form);
+      setForm({ date: "", location: "", slots: 20 });
+    } catch (e) {
+      alert("Erro: " + (e as Error).message);
+    }
   };
   return (
     <div className="space-y-4">
@@ -299,7 +302,7 @@ function Castration() {
               </div>
               {state.isAdmin && (
                 <button
-                  onClick={() => update({ castrations: state.castrations.filter((x) => x.id !== c.id) })}
+                  onClick={() => removeCastration(c.id).catch((e) => alert("Erro: " + e.message))}
                   className="text-muted-foreground hover:text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -314,19 +317,12 @@ function Castration() {
 }
 
 function Triage() {
-  const { state, update } = useStore();
+  const { state, setAnimalTriage } = useStore();
   if (state.animals.length === 0) {
     return <EmptyState icon={Stethoscope} message="Cadastre animais para iniciar a triagem." />;
   }
-  const setTriage = (id: string, patch: Partial<NonNullable<typeof state.animals[number]["triage"]>>) => {
-    update({
-      animals: state.animals.map((a) =>
-        a.id === id
-          ? { ...a, triage: { condition: "", notes: "", ...a.triage, ...patch } }
-          : a
-      ),
-    });
-  };
+  const setTriage = (id: string, patch: Partial<NonNullable<typeof state.animals[number]["triage"]>>) =>
+    setAnimalTriage(id, patch).catch((e) => alert("Erro: " + e.message));
   const attachReport = (id: string, file?: File) => {
     if (!file) return;
     const r = new FileReader();
