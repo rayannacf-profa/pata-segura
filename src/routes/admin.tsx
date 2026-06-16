@@ -201,6 +201,7 @@ function Animals() {
 
 function Reports() {
   const { state, removeReport } = useStore();
+  const [open, setOpen] = useState<typeof state.reports[number] | null>(null);
   if (state.reports.length === 0) {
     return <EmptyState icon={AlertTriangle} message="Nenhuma denúncia recebida ainda." />;
   }
@@ -208,6 +209,7 @@ function Reports() {
     <div className="space-y-3">
       {state.reports.map((r) => (
         <div key={r.id} className="rounded-2xl border border-border bg-card p-3 flex gap-3">
+          <button onClick={() => setOpen(r)} className="flex-shrink-0">
           {r.photo ? (
             <img src={r.photo} alt="" className="h-16 w-16 rounded-xl object-cover" />
           ) : (
@@ -215,19 +217,12 @@ function Reports() {
               <AlertTriangle className="h-6 w-6 text-destructive" />
             </div>
           )}
-          <div className="flex-1 min-w-0">
+          </button>
+          <button onClick={() => setOpen(r)} className="flex-1 min-w-0 text-left">
             <div className="flex items-center justify-between">
               <div className="text-[11px] text-muted-foreground">
                 {new Date(r.createdAt).toLocaleString("pt-BR")}
               </div>
-              {state.isAdmin && (
-                <button
-                  onClick={() => removeReport(r.id).catch((e) => alert("Erro: " + e.message))}
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              )}
             </div>
             <p className="text-sm mt-0.5 line-clamp-3">{r.description}</p>
             {r.lat != null && (
@@ -235,9 +230,58 @@ function Reports() {
                 {r.lat.toFixed(4)}, {r.lng!.toFixed(4)}
               </p>
             )}
-          </div>
+          </button>
+          {state.isAdmin && (
+            <button
+              onClick={() => removeReport(r.id).catch((e) => alert("Erro: " + e.message))}
+              className="text-muted-foreground hover:text-destructive self-start"
+              aria-label="Excluir"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
         </div>
       ))}
+      {open && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4"
+          onClick={() => setOpen(null)}
+        >
+          <div
+            className="bg-card rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {open.photo && (
+              <img src={open.photo} alt="" className="w-full max-h-80 object-cover rounded-t-2xl" />
+            )}
+            <div className="p-4 space-y-3">
+              <div className="text-[11px] text-muted-foreground">
+                {new Date(open.createdAt).toLocaleString("pt-BR")}
+              </div>
+              <p className="text-sm whitespace-pre-wrap">{open.description}</p>
+              {open.address && (
+                <p className="text-xs text-muted-foreground">{open.address}</p>
+              )}
+              {open.lat != null && (
+                <a
+                  href={`https://www.google.com/maps?q=${open.lat},${open.lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block text-xs text-primary underline"
+                >
+                  Abrir no mapa ({open.lat.toFixed(5)}, {open.lng!.toFixed(5)})
+                </a>
+              )}
+              <button
+                onClick={() => setOpen(null)}
+                className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
