@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      castrations: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          location: string
+          slots: number
+          taken: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          location: string
+          slots?: number
+          taken?: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          location?: string
+          slots?: number
+          taken?: number
+        }
+        Relationships: []
+      }
       dogs: {
         Row: {
           address: string | null
@@ -25,6 +52,7 @@ export type Database = {
           lat: number | null
           lng: number | null
           photo: string | null
+          triage: Json | null
           updated_at: string
         }
         Insert: {
@@ -37,6 +65,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           photo?: string | null
+          triage?: Json | null
           updated_at?: string
         }
         Update: {
@@ -49,7 +78,68 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           photo?: string | null
+          triage?: Json | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      notices: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          message: string
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          message: string
+          title: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          message?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          address: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          lat: number | null
+          lng: number | null
+          photo: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          photo?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          photo?: string | null
         }
         Relationships: []
       }

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Bell, Plus, Trash2, Megaphone, AlertCircle, Info } from "lucide-react";
-import { useStore, uid, type Notice } from "@/lib/store";
+import { useStore, type Notice } from "@/lib/store";
 import { useState } from "react";
 
 export const Route = createFileRoute("/avisos")({
@@ -20,19 +20,22 @@ const typeStyles: Record<Notice["type"], { icon: typeof Info; color: string; bg:
 };
 
 function AvisosPage() {
-  const { state, update } = useStore();
+  const { state, addNotice, removeNotice } = useStore();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: "", message: "", date: "", type: "info" as Notice["type"] });
 
-  const create = () => {
+  const create = async () => {
     if (!form.title.trim() || !form.message.trim()) return;
-    const next: Notice = { id: uid(), ...form, createdAt: Date.now() };
-    update({ notices: [next, ...state.notices] });
-    setForm({ title: "", message: "", date: "", type: "info" });
-    setOpen(false);
+    try {
+      await addNotice(form);
+      setForm({ title: "", message: "", date: "", type: "info" });
+      setOpen(false);
+    } catch (e) {
+      alert("Erro ao publicar: " + (e as Error).message);
+    }
   };
 
-  const remove = (id: string) => update({ notices: state.notices.filter((n) => n.id !== id) });
+  const remove = (id: string) => removeNotice(id).catch((e) => alert("Erro: " + e.message));
 
   return (
     <div className="mx-auto max-w-md">
