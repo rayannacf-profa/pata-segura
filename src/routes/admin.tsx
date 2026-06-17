@@ -315,6 +315,7 @@ function Reports() {
 function Castration() {
   const { state, addCastration, removeCastration } = useStore();
   const [form, setForm] = useState({ date: "", location: "", slots: 20 });
+  const [open, setOpen] = useState<typeof state.castrations[number] | null>(null);
   const create = async () => {
     if (!form.date || !form.location.trim()) return;
     try {
@@ -361,15 +362,15 @@ function Castration() {
         <div className="space-y-2">
           {state.castrations.map((c) => (
             <div key={c.id} className="rounded-2xl border border-border bg-card p-3 flex items-center gap-3">
-              <div className="rounded-xl bg-secondary/10 p-2">
+              <button onClick={() => setOpen(c)} className="rounded-xl bg-secondary/10 p-2">
                 <CalendarCheck className="h-5 w-5 text-secondary" />
-              </div>
-              <div className="flex-1 min-w-0">
+              </button>
+              <button onClick={() => setOpen(c)} className="flex-1 min-w-0 text-left">
                 <div className="text-sm font-semibold">{c.location}</div>
                 <div className="text-xs text-muted-foreground">
                   {c.date} · {c.taken}/{c.slots} vagas
                 </div>
-              </div>
+              </button>
               {state.isAdmin && (
                 <button
                   onClick={() => removeCastration(c.id).catch((e) => alert("Erro: " + e.message))}
@@ -380,6 +381,25 @@ function Castration() {
               )}
             </div>
           ))}
+        </div>
+      )}
+      {open && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4" onClick={() => setOpen(null)}>
+          <div className="bg-card rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2">
+              <CalendarCheck className="h-5 w-5 text-secondary" />
+              <h3 className="text-base font-semibold">{open.location}</h3>
+            </div>
+            <p className="text-sm"><span className="text-muted-foreground">Data:</span> {open.date}</p>
+            <p className="text-sm"><span className="text-muted-foreground">Vagas:</span> {open.taken}/{open.slots} ocupadas</p>
+            <p className="text-sm"><span className="text-muted-foreground">Disponíveis:</span> {Math.max(0, open.slots - open.taken)}</p>
+            <div className="text-[11px] text-muted-foreground">
+              Publicado em {new Date(open.createdAt).toLocaleString("pt-BR")}
+            </div>
+            <button onClick={() => setOpen(null)} className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold">
+              Fechar
+            </button>
+          </div>
         </div>
       )}
     </div>
