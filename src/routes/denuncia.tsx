@@ -107,7 +107,6 @@ function DenunciaPage() {
             <input
               type="file"
               accept="image/*"
-              capture="environment"
               className="hidden"
               onChange={(e) => pickPhoto(e.target.files?.[0])}
             />
