@@ -34,10 +34,10 @@ function Index() {
     { label: "Avisos", value: state.notices.length },
   ];
   const actions = [
-    { to: "/mapa", icon: MapPin, label: "Mapa de focos", desc: "Veja áreas críticas da cidade" },
     { to: "/denuncia", icon: AlertTriangle, label: "Denunciar maus-tratos", desc: "Envie fotos e localização" },
-    { to: "/avisos", icon: Bell, label: "Avisos da prefeitura", desc: "Campanhas e atualizações" },
+    { to: "/mapa", icon: MapPin, label: "Mapa de focos", desc: "Veja áreas críticas da cidade" },
     { to: "/admin", icon: Shield, label: isAdmin ? "Painel da prefeitura" : "Cachorros cadastrados", desc: isAdmin ? "Gestão e triagem clínica" : "Lista pública de animais" },
+    { to: "/avisos", icon: Bell, label: "Avisos da prefeitura", desc: "Campanhas e atualizações" },
   ] as const;
 
   return (
