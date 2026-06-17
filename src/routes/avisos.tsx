@@ -22,6 +22,7 @@ const typeStyles: Record<Notice["type"], { icon: typeof Info; color: string; bg:
 function AvisosPage() {
   const { state, addNotice, removeNotice } = useStore();
   const [open, setOpen] = useState(false);
+  const [detail, setDetail] = useState<typeof state.notices[number] | null>(null);
   const [form, setForm] = useState({ title: "", message: "", date: "", type: "info" as Notice["type"] });
 
   const create = async () => {
@@ -115,29 +116,58 @@ function AvisosPage() {
             return (
               <article key={n.id} className="rounded-2xl border border-border bg-card p-4">
                 <div className="flex items-start gap-3">
-                  <div className={`rounded-xl ${style.bg} p-2`}>
+                  <button onClick={() => setDetail(n)} className={`rounded-xl ${style.bg} p-2`}>
                     <Icon className={`h-5 w-5 ${style.color}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
+                  </button>
+                  <button onClick={() => setDetail(n)} className="flex-1 min-w-0 text-left">
                     <div className="flex items-center justify-between gap-2">
                       <h3 className="text-sm font-semibold">{n.title}</h3>
-                      {state.isAdmin && (
-                        <button onClick={() => remove(n.id)} className="text-muted-foreground hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
                     </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{n.message}</p>
+                    <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{n.message}</p>
                     {n.date && (
                       <p className="mt-2 text-[11px] uppercase tracking-wide text-primary">{n.date}</p>
                     )}
-                  </div>
+                  </button>
+                  {state.isAdmin && (
+                    <button onClick={() => remove(n.id)} className="text-muted-foreground hover:text-destructive" aria-label="Excluir">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </article>
             );
           })
         )}
       </div>
+
+      {detail && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4" onClick={() => setDetail(null)}>
+          <div className="bg-card rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              {(() => {
+                const s = typeStyles[detail.type];
+                const I = s.icon;
+                return (
+                  <div className={`rounded-xl ${s.bg} p-2`}>
+                    <I className={`h-5 w-5 ${s.color}`} />
+                  </div>
+                );
+              })()}
+              <h3 className="text-base font-semibold flex-1">{detail.title}</h3>
+            </div>
+            <p className="text-sm whitespace-pre-wrap">{detail.message}</p>
+            {detail.date && (
+              <p className="text-[11px] uppercase tracking-wide text-primary">{detail.date}</p>
+            )}
+            <div className="text-[11px] text-muted-foreground">
+              Publicado em {new Date(detail.createdAt).toLocaleString("pt-BR")}
+            </div>
+            <button onClick={() => setDetail(null)} className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold">
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
