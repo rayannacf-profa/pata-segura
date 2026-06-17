@@ -143,6 +143,7 @@ function Animals() {
   const { isAdmin } = useAuth();
   const { data: dogs = [], isLoading } = useDogs();
   const qc = useQueryClient();
+  const [open, setOpen] = useState<Dog | null>(null);
 
   const remove = async (id: string) => {
     const { error } = await supabase.from("dogs").delete().eq("id", id);
@@ -170,21 +171,18 @@ function Animals() {
     <div className="space-y-3">
       {dogs.map((a) => (
         <div key={a.id} className="rounded-2xl border border-border bg-card p-3 flex gap-3">
-          {a.photo ? (
-            <img src={a.photo} alt="" className="h-16 w-16 rounded-xl object-cover" />
-          ) : (
-            <div className="h-16 w-16 rounded-xl bg-muted flex items-center justify-center">
-              <PawPrint className="h-6 w-6 text-muted-foreground" />
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
+          <button onClick={() => setOpen(a)} className="flex-shrink-0">
+            {a.photo ? (
+              <img src={a.photo} alt="" className="h-16 w-16 rounded-xl object-cover" />
+            ) : (
+              <div className="h-16 w-16 rounded-xl bg-muted flex items-center justify-center">
+                <PawPrint className="h-6 w-6 text-muted-foreground" />
+              </div>
+            )}
+          </button>
+          <button onClick={() => setOpen(a)} className="flex-1 min-w-0 text-left">
             <div className="flex items-center justify-between">
               <div className="text-xs font-semibold text-primary uppercase tracking-wide">{a.condition}</div>
-              {isAdmin && (
-                <button onClick={() => remove(a.id)} className="text-muted-foreground hover:text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              )}
             </div>
             <p className="text-sm mt-0.5 line-clamp-2">{a.description}</p>
             {a.lat != null && (
@@ -192,9 +190,37 @@ function Animals() {
                 {a.lat.toFixed(4)}, {a.lng?.toFixed(4)}
               </p>
             )}
-          </div>
+          </button>
+          {isAdmin && (
+            <button onClick={() => remove(a.id)} className="text-muted-foreground hover:text-destructive self-start" aria-label="Excluir">
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
         </div>
       ))}
+      {open && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4" onClick={() => setOpen(null)}>
+          <div className="bg-card rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {open.photo && <img src={open.photo} alt="" className="w-full max-h-80 object-cover rounded-t-2xl" />}
+            <div className="p-4 space-y-3">
+              <div className="text-xs font-semibold text-primary uppercase tracking-wide">{open.condition}</div>
+              <p className="text-sm whitespace-pre-wrap">{open.description}</p>
+              {open.address && <p className="text-xs text-muted-foreground">{open.address}</p>}
+              {open.lat != null && (
+                <a href={`https://www.google.com/maps?q=${open.lat},${open.lng}`} target="_blank" rel="noreferrer" className="block text-xs text-primary underline">
+                  Abrir no mapa ({open.lat.toFixed(5)}, {open.lng!.toFixed(5)})
+                </a>
+              )}
+              <div className="text-[11px] text-muted-foreground">
+                Cadastrado em {new Date(open.created_at).toLocaleString("pt-BR")}
+              </div>
+              <button onClick={() => setOpen(null)} className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold">
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -289,6 +315,7 @@ function Reports() {
 function Castration() {
   const { state, addCastration, removeCastration } = useStore();
   const [form, setForm] = useState({ date: "", location: "", slots: 20 });
+  const [open, setOpen] = useState<typeof state.castrations[number] | null>(null);
   const create = async () => {
     if (!form.date || !form.location.trim()) return;
     try {
@@ -335,15 +362,15 @@ function Castration() {
         <div className="space-y-2">
           {state.castrations.map((c) => (
             <div key={c.id} className="rounded-2xl border border-border bg-card p-3 flex items-center gap-3">
-              <div className="rounded-xl bg-secondary/10 p-2">
+              <button onClick={() => setOpen(c)} className="rounded-xl bg-secondary/10 p-2">
                 <CalendarCheck className="h-5 w-5 text-secondary" />
-              </div>
-              <div className="flex-1 min-w-0">
+              </button>
+              <button onClick={() => setOpen(c)} className="flex-1 min-w-0 text-left">
                 <div className="text-sm font-semibold">{c.location}</div>
                 <div className="text-xs text-muted-foreground">
                   {c.date} · {c.taken}/{c.slots} vagas
                 </div>
-              </div>
+              </button>
               {state.isAdmin && (
                 <button
                   onClick={() => removeCastration(c.id).catch((e) => alert("Erro: " + e.message))}
@@ -356,12 +383,32 @@ function Castration() {
           ))}
         </div>
       )}
+      {open && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4" onClick={() => setOpen(null)}>
+          <div className="bg-card rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2">
+              <CalendarCheck className="h-5 w-5 text-secondary" />
+              <h3 className="text-base font-semibold">{open.location}</h3>
+            </div>
+            <p className="text-sm"><span className="text-muted-foreground">Data:</span> {open.date}</p>
+            <p className="text-sm"><span className="text-muted-foreground">Vagas:</span> {open.taken}/{open.slots} ocupadas</p>
+            <p className="text-sm"><span className="text-muted-foreground">Disponíveis:</span> {Math.max(0, open.slots - open.taken)}</p>
+            <div className="text-[11px] text-muted-foreground">
+              Publicado em {new Date(open.createdAt).toLocaleString("pt-BR")}
+            </div>
+            <button onClick={() => setOpen(null)} className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold">
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function Triage() {
   const { state, setAnimalTriage } = useStore();
+  const [openId, setOpenId] = useState<string | null>(null);
   if (state.animals.length === 0) {
     return <EmptyState icon={Stethoscope} message="Cadastre animais para iniciar a triagem." />;
   }
@@ -373,10 +420,15 @@ function Triage() {
     r.onload = () => setTriage(id, { reportName: file.name, reportData: r.result as string });
     r.readAsDataURL(file);
   };
+  const open = state.animals.find((a) => a.id === openId) ?? null;
   return (
     <div className="space-y-3">
       {state.animals.map((a) => (
-        <div key={a.id} className="rounded-2xl border border-border bg-card p-3 space-y-3">
+        <button
+          key={a.id}
+          onClick={() => setOpenId(a.id)}
+          className="w-full text-left rounded-2xl border border-border bg-card p-3"
+        >
           <div className="flex items-center gap-3">
             {a.photo ? (
               <img src={a.photo} alt="" className="h-12 w-12 rounded-xl object-cover" />
@@ -387,56 +439,81 @@ function Triage() {
             )}
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold line-clamp-1">{a.description}</div>
-              <div className="text-[11px] text-muted-foreground">{a.condition}</div>
+              <div className="text-[11px] text-muted-foreground">
+                {a.triage?.condition ? `Diagnóstico: ${a.triage.condition}` : "Sem diagnóstico"}
+              </div>
             </div>
+            <Stethoscope className="h-4 w-4 text-muted-foreground" />
           </div>
-          <select
-            disabled={!state.isAdmin}
-            value={a.triage?.condition ?? ""}
-            onChange={(e) => setTriage(a.id, { condition: e.target.value })}
-            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm disabled:opacity-60"
-          >
-            <option value="">Sem diagnóstico</option>
-            <option>Calazar (Leishmaniose)</option>
-            <option>Raiva</option>
-            <option>Sarna</option>
-            <option>Erliquiose</option>
-            <option>Verminose</option>
-            <option>Desnutrição</option>
-            <option>Outro</option>
-          </select>
-          <textarea
-            disabled={!state.isAdmin}
-            value={a.triage?.notes ?? ""}
-            onChange={(e) => setTriage(a.id, { notes: e.target.value })}
-            placeholder="Observações clínicas"
-            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm min-h-16 disabled:opacity-60"
-          />
-          {state.isAdmin && (
-            <label className="flex items-center gap-2 rounded-xl border border-dashed border-border bg-background px-3 py-2 text-xs cursor-pointer">
-              <FileText className="h-4 w-4 text-primary" />
-              <span className="flex-1">
-                {a.triage?.reportName ? `Laudo: ${a.triage.reportName}` : "Anexar laudo (PDF/imagem)"}
-              </span>
-              <input
-                type="file"
-                accept="application/pdf,image/*"
-                className="hidden"
-                onChange={(e) => attachReport(a.id, e.target.files?.[0])}
-              />
-            </label>
-          )}
-          {a.triage?.reportData && (
-            <a
-              href={a.triage.reportData}
-              download={a.triage.reportName}
-              className="flex items-center justify-center gap-2 rounded-xl bg-secondary/15 text-secondary py-2 text-xs font-semibold"
-            >
-              <Download className="h-4 w-4" /> Baixar laudo
-            </a>
-          )}
-        </div>
+        </button>
       ))}
+      {open && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4" onClick={() => setOpenId(null)}>
+          <div className="bg-card rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              {open.photo ? (
+                <img src={open.photo} alt="" className="h-14 w-14 rounded-xl object-cover" />
+              ) : (
+                <div className="h-14 w-14 rounded-xl bg-muted flex items-center justify-center">
+                  <PawPrint className="h-5 w-5 text-muted-foreground" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold">{open.description}</div>
+                <div className="text-[11px] text-muted-foreground">{open.condition}</div>
+              </div>
+            </div>
+            <select
+              disabled={!state.isAdmin}
+              value={open.triage?.condition ?? ""}
+              onChange={(e) => setTriage(open.id, { condition: e.target.value })}
+              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm disabled:opacity-60"
+            >
+              <option value="">Sem diagnóstico</option>
+              <option>Calazar (Leishmaniose)</option>
+              <option>Raiva</option>
+              <option>Sarna</option>
+              <option>Erliquiose</option>
+              <option>Verminose</option>
+              <option>Desnutrição</option>
+              <option>Outro</option>
+            </select>
+            <textarea
+              disabled={!state.isAdmin}
+              value={open.triage?.notes ?? ""}
+              onChange={(e) => setTriage(open.id, { notes: e.target.value })}
+              placeholder="Observações clínicas"
+              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm min-h-24 disabled:opacity-60"
+            />
+            {state.isAdmin && (
+              <label className="flex items-center gap-2 rounded-xl border border-dashed border-border bg-background px-3 py-2 text-xs cursor-pointer">
+                <FileText className="h-4 w-4 text-primary" />
+                <span className="flex-1">
+                  {open.triage?.reportName ? `Laudo: ${open.triage.reportName}` : "Anexar laudo (PDF/imagem)"}
+                </span>
+                <input
+                  type="file"
+                  accept="application/pdf,image/*"
+                  className="hidden"
+                  onChange={(e) => attachReport(open.id, e.target.files?.[0])}
+                />
+              </label>
+            )}
+            {open.triage?.reportData && (
+              <a
+                href={open.triage.reportData}
+                download={open.triage.reportName}
+                className="flex items-center justify-center gap-2 rounded-xl bg-secondary/15 text-secondary py-2 text-xs font-semibold"
+              >
+                <Download className="h-4 w-4" /> Baixar laudo
+              </a>
+            )}
+            <button onClick={() => setOpenId(null)} className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold">
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
