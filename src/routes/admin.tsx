@@ -143,6 +143,7 @@ function Animals() {
   const { isAdmin } = useAuth();
   const { data: dogs = [], isLoading } = useDogs();
   const qc = useQueryClient();
+  const [open, setOpen] = useState<Dog | null>(null);
 
   const remove = async (id: string) => {
     const { error } = await supabase.from("dogs").delete().eq("id", id);
@@ -170,21 +171,18 @@ function Animals() {
     <div className="space-y-3">
       {dogs.map((a) => (
         <div key={a.id} className="rounded-2xl border border-border bg-card p-3 flex gap-3">
-          {a.photo ? (
-            <img src={a.photo} alt="" className="h-16 w-16 rounded-xl object-cover" />
-          ) : (
-            <div className="h-16 w-16 rounded-xl bg-muted flex items-center justify-center">
-              <PawPrint className="h-6 w-6 text-muted-foreground" />
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
+          <button onClick={() => setOpen(a)} className="flex-shrink-0">
+            {a.photo ? (
+              <img src={a.photo} alt="" className="h-16 w-16 rounded-xl object-cover" />
+            ) : (
+              <div className="h-16 w-16 rounded-xl bg-muted flex items-center justify-center">
+                <PawPrint className="h-6 w-6 text-muted-foreground" />
+              </div>
+            )}
+          </button>
+          <button onClick={() => setOpen(a)} className="flex-1 min-w-0 text-left">
             <div className="flex items-center justify-between">
               <div className="text-xs font-semibold text-primary uppercase tracking-wide">{a.condition}</div>
-              {isAdmin && (
-                <button onClick={() => remove(a.id)} className="text-muted-foreground hover:text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              )}
             </div>
             <p className="text-sm mt-0.5 line-clamp-2">{a.description}</p>
             {a.lat != null && (
@@ -192,9 +190,37 @@ function Animals() {
                 {a.lat.toFixed(4)}, {a.lng?.toFixed(4)}
               </p>
             )}
-          </div>
+          </button>
+          {isAdmin && (
+            <button onClick={() => remove(a.id)} className="text-muted-foreground hover:text-destructive self-start" aria-label="Excluir">
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
         </div>
       ))}
+      {open && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4" onClick={() => setOpen(null)}>
+          <div className="bg-card rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {open.photo && <img src={open.photo} alt="" className="w-full max-h-80 object-cover rounded-t-2xl" />}
+            <div className="p-4 space-y-3">
+              <div className="text-xs font-semibold text-primary uppercase tracking-wide">{open.condition}</div>
+              <p className="text-sm whitespace-pre-wrap">{open.description}</p>
+              {open.address && <p className="text-xs text-muted-foreground">{open.address}</p>}
+              {open.lat != null && (
+                <a href={`https://www.google.com/maps?q=${open.lat},${open.lng}`} target="_blank" rel="noreferrer" className="block text-xs text-primary underline">
+                  Abrir no mapa ({open.lat.toFixed(5)}, {open.lng!.toFixed(5)})
+                </a>
+              )}
+              <div className="text-[11px] text-muted-foreground">
+                Cadastrado em {new Date(open.created_at).toLocaleString("pt-BR")}
+              </div>
+              <button onClick={() => setOpen(null)} className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold">
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
