@@ -3,9 +3,6 @@ import { useEffect, useState } from "react";
 import { PawPrint } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
-const ADMIN_EMAIL = "PataSegura1.0@gmail.com";
-const ADMIN_PASSWORD = "pataseguraemunicipio";
-
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
@@ -98,25 +95,9 @@ function AuthPage() {
         {mode === "signin" ? "Não tem conta? Criar agora" : "Já tem conta? Entrar"}
       </button>
 
-      {mode === "signin" && (
-        <button
-          type="button"
-          onClick={() => {
-            setMode("signin");
-            setEmail(ADMIN_EMAIL);
-            setPassword(ADMIN_PASSWORD);
-            setError(null);
-          }}
-          className="mt-3 w-full rounded-xl border border-input bg-card px-3 py-2.5 text-xs font-semibold text-foreground hover:bg-primary/5"
-        >
-          Inserir login de administrador
-        </button>
-      )}
-
       <p className="mt-8 text-[11px] text-muted-foreground text-center leading-relaxed">
-        Use o administrador oficial:
-        <br />
-        <strong>{ADMIN_EMAIL}</strong> / <strong>{ADMIN_PASSWORD}</strong>
+        Apenas o e-mail oficial da equipe tem acesso de administrador.
+        Demais contas podem visualizar a lista de cachorros cadastrados.
       </p>
     </div>
   );
