@@ -3,7 +3,15 @@ import { useEffect, useState } from "react";
 import { PawPrint } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
+function safeNext(next: unknown) {
+  return typeof next === "string" && next.startsWith("/") && !next.startsWith("//") ? next : null;
+}
+
 export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>): { next?: string } => {
+    const next = safeNext(s.next);
+    return next ? { next } : {};
+  },
   head: () => ({
     meta: [
       { title: "Entrar — PataSegura" },
@@ -16,6 +24,11 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const { signIn, signUp, user, loading } = useAuth();
   const nav = useNavigate();
+  const { next } = Route.useSearch();
+  const goNext = () => {
+    if (next) window.location.href = next;
+    else nav({ to: "/" });
+  };
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +36,7 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) nav({ to: "/" });
+    if (!loading && user) goNext();
   }, [user, loading, nav]);
 
   const submit = async (e: React.FormEvent) => {
@@ -35,7 +48,7 @@ function AuthPage() {
       : await signUp(email, password);
     setBusy(false);
     if (error) setError(error);
-    else nav({ to: "/" });
+    else goNext();
   };
 
   return (
